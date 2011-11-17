@@ -9,8 +9,8 @@ If you want to get started with this repository in a single shot and want to
 clone and build all the default projects (assuming you have the necessary build
 dependencies and compilers already on your system), type this::
 
-    git clone git://github.com/fperez/pysources.git
-    cd pysources
+    git clone git://github.com/fperez/pyston.git
+    cd pyston
     ./pyston all clone install
 
 
