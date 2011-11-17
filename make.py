@@ -164,15 +164,16 @@ def install(targets):
 
 def install_clean(targets):
     for target in targets:
-        command = 'rm -rf %s/%s*'%(site_packages, target)
+        command = 'rm -rf %s/%s'%(site_packages, target)
         print ('cleaning install dir for %s: %s' % (target, command))
         sh(command)
+        sh(command + '*.egg*')
         if target == 'matplotlib':
             print('Extra cleanup for matplotlib')
             # Special cleanup needed because matplotlib leaves things outside
             # of its package directory
             c = 'rm -rf %s/' % site_packages
-            for p in ['pytz', 'dateutil', 'pylab*']:
+            for p in ['pytz', 'dateutil', 'pylab*', 'mpl_toolkits']:
                 sh(c+p)
 
 
@@ -239,13 +240,20 @@ if __name__=='__main__':
 
     # Targets must be given
     targets = sys.argv[1].split(',')
-    if targets == ['all']:
-        targets = projects
 
     # Actions, default is to update all targets
     actions = sys.argv[2:]
     if not actions:
         actions = ['update']
+
+    if targets == ['all']:
+        # Unless cloning, 'all' should be interpreted as 'all available', so
+        # that it doesn't complain about missing targets that are in the
+        # default list.
+        if 'clone' in actions:
+            targets = projects
+        else:
+            targets = [p for p in projects if os.path.isdir(p)]
         
     # Ensure all actions and targets are valid, and execute
     validate(actions, actiond, 'action')
