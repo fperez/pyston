@@ -49,7 +49,12 @@ to None, then `--user` is passed to the setup.py installation routine.
 Otherwise, the value is used with the `--prefix` argument.
 
 The list of projects to install is set in the `projects` variable, which should
-be a list of strings corresponding to project names on github.
+be a list of strings corresponding to project names on github.  This list is
+automatically updated with any other paths that contain a `.git` subdirectory
+*and* a `setup.py` file.  You can therefore manually clone any other github
+python projects you want and they will be automatically picked up as well,
+without having to update the `projects` list by hand each time (updating the
+default `projects` is only needed for the `clone` action).
 
 These two variables, `prefix` and `projects`, are set to their defaults in this
 file, but can be modified by the user by defining them in a file named
