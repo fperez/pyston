@@ -21,7 +21,22 @@ compilers already on your system), simply::
     ./make.py all clone
     ./make.py all install
 
+Afterwards, this::
 
+    ./make.py all
+
+will run a full update of all packages (i.e. pull from git, remove previous
+build/install, rebuild from scratch and reinstall).  Individual packages can be
+updated::
+
+    ./make.py numpy,scipy
+
+and if you want finer control (for example, install without removing previous
+build/installation data)::
+
+    ./make.py all pull install
+    
+    
 Customization
 =============
 
