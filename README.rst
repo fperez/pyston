@@ -11,9 +11,9 @@ update them with a simple command.
 Usage
 =====
 
-The `make.py` script prints a usage message if you simply call it.  If you want
-to get started with this repository in a single shot and want to build all the
-default projects (assuming you have the necessary build dependencies and
+The ``make.py`` script prints a usage message if you simply call it.  If you
+want to get started with this repository in a single shot and want to build all
+the default projects (assuming you have the necessary build dependencies and
 compilers already on your system), simply::
 
     git clone git://github.com/fperez/pysources.git
@@ -44,28 +44,29 @@ The general syntax is::
 Customization
 =============
 
-The install location directive is controlled by the `prefix` variable.  If set
-to None, then `--user` is passed to the setup.py installation routine.
-Otherwise, the value is used with the `--prefix` argument.
+The install location directive is controlled by the ``prefix`` variable.  If
+set to None, then ``--user`` is passed to the setup.py installation routine.
+Otherwise, the value is used with the ``--prefix`` argument.
 
-The list of projects to install is set in the `projects` variable, which should
-be a list of strings corresponding to project names on github.  This list is
-automatically updated with any other paths that contain a `.git` subdirectory
-*and* a `setup.py` file.  You can therefore manually clone any other github
-python projects you want and they will be automatically picked up as well,
-without having to update the `projects` list by hand each time (updating the
-default `projects` is only needed for the `clone` action).
+The list of projects to install is set in the ``projects`` variable, which
+should be a list of strings corresponding to project names on github.  This
+list is automatically updated with any other paths that contain a ``.git``
+subdirectory *and* a ``setup.py`` file.  You can therefore manually clone any
+other github python projects you want and they will be automatically picked up
+as well, without having to update the ``projects`` list by hand each time
+(updating the default ``projects`` is only needed for the ``clone`` action).
 
-These two variables, `prefix` and `projects`, are set to their defaults in this
-file, but can be modified by the user by defining them in a file named
-`make_conf.py` located in this same directory.  A template for that file should
-have been provided along with this script, but absent that, it's just a python
-script that declares two variables named `prefix` and `projects` as indicated.
+These two variables, ``prefix`` and ``projects``, are set to their defaults in
+this file, but can be modified by the user by defining them in a file named
+``make_conf.py`` located in this same directory.  A template for that file
+should have been provided along with this script, but absent that, it's just a
+python script that declares two variables named ``prefix`` and ``projects`` as
+indicated.
 
 If you use the default prefix, Python will automatically find packages
-installed with `--user`, but scripts will go to `~/.local/bin`.  You should
+installed with ``--user``, but scripts will go to ``~/.local/bin``.  You should
 thus configure your $PATH to include this by using something such as this in
-your `~/.bashrc` file::
+your ``~/.bashrc`` file::
 
   export PATH=$HOME/.local/bin:$PATH
   
