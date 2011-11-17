@@ -31,11 +31,15 @@ updated::
 
     ./make.py numpy,scipy
 
-and if you want finer control (for example, install without removing previous
-build/installation data)::
+and if you want finer control (for example, pull from github and install
+without removing previous build/installation data)::
 
     ./make.py all pull install
+
+The general syntax is::
     
+    ./make.py  TARGET1,TARGET2  ACTION1  ACTION2 ...
+
     
 Customization
 =============
