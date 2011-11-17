@@ -11,7 +11,7 @@ dependencies and compilers already on your system), type this::
 
     git clone git://github.com/fperez/pysources.git
     cd pysources
-    ./make.py all clone install
+    ./pyston all clone install
 
 
 Purpose
@@ -25,7 +25,7 @@ update them with a simple command.
 Usage
 =====
 
-  ./make.py  TARGET1,TARGET2  ACTION1  ACTION2 ...
+  ./pyston  TARGET1,TARGET2  ACTION1  ACTION2 ...
 
 TARGET is 'all' or a *comma-separated* list of targets.
 
@@ -37,23 +37,23 @@ The simplest way to use it is to
 
 Afterwards, this::
 
-    ./make.py all
+    ./pyston all
 
 will run a full update of all packages (i.e. pull from git, remove previous
 build/install, rebuild from scratch and reinstall).  Individual packages can be
 updated::
 
-    ./make.py numpy,scipy
+    ./pyston numpy,scipy
 
 and if you want finer control (for example, pull from github and install
 without removing previous build/installation data)::
 
-    ./make.py all pull install
+    ./pyston all pull install
 
 You can also clone and install any project that's hosted on github with a URL
 of the pattern ``github.com/PROJECT/PROJECT`` with::
 
-    ./make.py PROJECT clone install
+    ./pyston PROJECT clone install
 
 even if it is not listed on the default project list.  And since all locally
 available packages (directories with ``.git`` and ``setup.py``) are
@@ -62,7 +62,7 @@ need for further customization.
     
 The general syntax is::
     
-    ./make.py  TARGET1,TARGET2  ACTION1  ACTION2 ...
+    ./pyston  TARGET1,TARGET2  ACTION1  ACTION2 ...
 
 
 Customization
@@ -84,7 +84,7 @@ as well, without having to update the ``projects`` list by hand each time
 
 These two variables, ``prefix`` and ``projects``, are set to their defaults in
 this file, but can be modified by the user by defining them in a file named
-``make_conf.py`` located in this same directory (a file overrides also the
+``pyston_conf.py`` located in this same directory (a file overrides also the
 ``PREFIX`` environment variable).  A template for that file should have been
 provided along with this script, but absent that, it's just a python script
 that declares two variables named ``prefix`` and ``projects`` as indicated.
