@@ -1,6 +1,14 @@
 #!/usr/bin/env python
 """Clone/update from github and locally install Python packages.
 
+Purpose
+=======
+
+This is a simple tool meant to easily manage a collection of github-hosted
+python packages from source, so that it's quick to clone, build, install and
+update them with a simple command.
+
+
 Usage
 =====
 
@@ -12,19 +20,38 @@ ACTION defaults to `update`, which pulls from git, fully cleans all
 build/installation products, and installs.
 
 
-Current configuration
-=====================
+The simplest way to use it is to 
 
-Valid targets:
-  %(targets)s
+Afterwards, this::
 
-Valid actions:
-  %(actions)s
+    ./make.py all
 
-Install location directive:
-  %(install)s
+will run a full update of all packages (i.e. pull from git, remove previous
+build/install, rebuild from scratch and reinstall).  Individual packages can be
+updated::
 
+    ./make.py numpy,scipy
 
+and if you want finer control (for example, pull from github and install
+without removing previous build/installation data)::
+
+    ./make.py all pull install
+
+You can also clone and install any project that's hosted on github with a URL
+of the pattern ``github.com/PROJECT/PROJECT`` with::
+
+    ./make.py PROJECT clone install
+
+even if it is not listed on the default project list.  And since all locally
+available packages (directories with ``.git`` and ``setup.py``) are
+automatically loaded, you can use this tool to continue updating them without
+need for further customization.
+    
+The general syntax is::
+    
+    ./make.py  TARGET1,TARGET2  ACTION1  ACTION2 ...
+
+    
 Customization
 =============
 
@@ -75,6 +102,7 @@ Authors
 from __future__ import print_function
 
 from subprocess import check_call
+
 import os
 import sys
 
@@ -91,7 +119,21 @@ def usage():
     install = install_location
     targets = sorted(projects)
     actions = sorted(actiond)
-    print(__doc__ % locals())
+    config = """
+Current configuration
+=====================
+
+Valid targets:
+  %(targets)s
+
+Valid actions:
+  %(actions)s
+
+Install location directive:
+  %(install)s
+"""  % locals()
+    print(__doc__)
+    print(config)
     sys.exit(1)
 
 
@@ -115,9 +157,8 @@ def update_projects():
         # Only check for things not already in the projects list
         for d in set(dirs) - set(projects):
             if os.path.isdir('%s/.git' % d) and \
-               os.path.isfile('%s/setup.py' %d):
+               os.path.isfile('%s/setup.py' % d):
                 local_projects.append(d)
-    print('Adding local projects:', local_projects)
     projects.extend(local_projects)
 
 
@@ -163,18 +204,20 @@ def install(targets):
 
 
 def install_clean(targets):
+    base = 'rm -rf %s/' % site_packages
     for target in targets:
-        command = 'rm -rf %s/%s'%(site_packages, target)
+        command = base + target
         print ('cleaning install dir for %s: %s' % (target, command))
         sh(command)
         sh(command + '*.egg*')
+        # Special cleanups for certain projects with different naming
+        # conventions or that leave things outside their main package dir
         if target == 'matplotlib':
-            print('Extra cleanup for matplotlib')
-            # Special cleanup needed because matplotlib leaves things outside
-            # of its package directory
-            c = 'rm -rf %s/' % site_packages
             for p in ['pytz', 'dateutil', 'pylab*', 'mpl_toolkits']:
-                sh(c+p)
+                sh(base+p)
+        elif target == 'cython':
+            sh(base+'Cython*')
+            sh(base+'pyximport')
 
 
 def update(targets):
@@ -257,7 +300,16 @@ if __name__=='__main__':
         
     # Ensure all actions and targets are valid, and execute
     validate(actions, actiond, 'action')
-    validate(targets, projects, 'target')
 
+    # If users call 'clone', that action should be performed first without
+    # target validation, so people can clone any github project without having
+    # to edit the config at all.
+    if 'clone' in actions:
+        clone(targets)
+        actions.remove('clone')
+        update_projects()
+
+    # After clone, all other actions should only be performed on valid targets
+    validate(targets, projects, 'target')
     for action in actions:
         actiond[action](targets)

@@ -2,24 +2,38 @@
  Python Source Package Update/Build utility
 ============================================
 
-Clone/update from github and locally install Python packages.
+Quickstart
+==========
 
-This is a simple script meant to easily manage a collection of github-hosted
+If you want to get started with this repository in a single shot and want to
+clone and build all the default projects (assuming you have the necessary build
+dependencies and compilers already on your system), type this::
+
+    git clone git://github.com/fperez/pysources.git
+    cd pysources
+    ./make.py all clone install
+
+
+Purpose
+=======
+
+This is a simple tool meant to easily manage a collection of github-hosted
 python packages from source, so that it's quick to clone, build, install and
 update them with a simple command.
+
 
 Usage
 =====
 
-The ``make.py`` script prints a usage message if you simply call it.  If you
-want to get started with this repository in a single shot and want to build all
-the default projects (assuming you have the necessary build dependencies and
-compilers already on your system), simply::
+  ./make.py  TARGET1,TARGET2  ACTION1  ACTION2 ...
 
-    git clone git://github.com/fperez/pysources.git
-    cd pysources
-    ./make.py all clone
-    ./make.py all install
+TARGET is 'all' or a *comma-separated* list of targets.
+
+ACTION defaults to `update`, which pulls from git, fully cleans all
+build/installation products, and installs.
+
+
+The simplest way to use it is to 
 
 Afterwards, this::
 
@@ -36,6 +50,16 @@ without removing previous build/installation data)::
 
     ./make.py all pull install
 
+You can also clone and install any project that's hosted on github with a URL
+of the pattern ``github.com/PROJECT/PROJECT`` with::
+
+    ./make.py PROJECT clone install
+
+even if it is not listed on the default project list.  And since all locally
+available packages (directories with ``.git`` and ``setup.py``) are
+automatically loaded, you can use this tool to continue updating them without
+need for further customization.
+    
 The general syntax is::
     
     ./make.py  TARGET1,TARGET2  ACTION1  ACTION2 ...
@@ -69,12 +93,13 @@ thus configure your $PATH to include this by using something such as this in
 your ``~/.bashrc`` file::
 
   export PATH=$HOME/.local/bin:$PATH
-  
+
 
 License
 =======
 
 Released under the terms of the simplified BSD license.
+
 
 Authors
 =======
