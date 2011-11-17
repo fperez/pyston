@@ -11,29 +11,32 @@ update them with a simple command.
 Usage
 =====
 
-  ./make.py  TARGET1,TARGET2  ACTION1  ACTION2 ...
+The `make.py` script prints a usage message if you simply call it.  If you want
+to get started with this repository in a single shot and want to build all the
+default projects (assuming you have the necessary build dependencies and
+compilers already on your system), simply::
 
-TARGET is 'all' or a *comma-separated* list of targets.
-
-ACTION defaults to 'update', which pulls from git, fully cleans all
-build/installation products, and installs.
+    git clone git://github.com/fperez/pysources.git
+    cd pysources
+    ./make.py all clone
+    ./make.py all install
 
 
 Customization
 =============
 
-The install location directive is controlled by the 'prefix' variable.  If set
-to None, then '--user' is passed to the setup.py installation routine.
-Otherwise, the value is used with the '--prefix' argument.
+The install location directive is controlled by the `prefix` variable.  If set
+to None, then `--user` is passed to the setup.py installation routine.
+Otherwise, the value is used with the `--prefix` argument.
 
-The list of projects to install is set in the 'projects' variable, which should
+The list of projects to install is set in the `projects` variable, which should
 be a list of strings corresponding to project names on github.
 
-These two variables, 'prefix' and 'projects', are set to their defaults in this
+These two variables, `prefix` and `projects`, are set to their defaults in this
 file, but can be modified by the user by defining them in a file named
-'make_conf.py' located in this same directory.  A template for that file should
+`make_conf.py` located in this same directory.  A template for that file should
 have been provided along with this script, but absent that, it's just a python
-script that declares two variables named 'prefix' and 'projects' as indicated.
+script that declares two variables named `prefix` and `projects` as indicated.
 
 If you use the default prefix, Python will automatically find packages
 installed with `--user`, but scripts will go to `~/.local/bin`.  You should
