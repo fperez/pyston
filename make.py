@@ -57,7 +57,9 @@ Customization
 
 The install location directive is controlled by the ``prefix`` variable.  If
 set to None, then ``--user`` is passed to the setup.py installation routine.
-Otherwise, the value is used with the ``--prefix`` argument.
+Otherwise, the value is used with the ``--prefix`` argument.  If you define the
+*environment* variable called ``PREFIX``, it will be used as the value for
+``prefix``.
 
 The list of projects to install is set in the ``projects`` variable, which
 should be a list of strings corresponding to project names on github.  This
@@ -69,10 +71,10 @@ as well, without having to update the ``projects`` list by hand each time
 
 These two variables, ``prefix`` and ``projects``, are set to their defaults in
 this file, but can be modified by the user by defining them in a file named
-``make_conf.py`` located in this same directory.  A template for that file
-should have been provided along with this script, but absent that, it's just a
-python script that declares two variables named ``prefix`` and ``projects`` as
-indicated.
+``make_conf.py`` located in this same directory (a file overrides also the
+``PREFIX`` environment variable).  A template for that file should have been
+provided along with this script, but absent that, it's just a python script
+that declares two variables named ``prefix`` and ``projects`` as indicated.
 
 If you use the default prefix, Python will automatically find packages
 installed with ``--user``, but scripts will go to ``~/.local/bin``.  You should
@@ -241,8 +243,9 @@ def clean(targets):
 
 if __name__=='__main__':
 
-    # Default configuration.  This can be overridden in teh make_conf.py file
-    prefix = None  # amounts to installing with --user, to ~/.local/
+    # Default configuration.  This can be overridden in the make_conf.py file.
+    # None amounts to installing with --user, which puts things in ~/.local/.
+    prefix = os.environ.get('PREFIX')
 
     projects = ['ipython', 'numpy', 'scipy', 'matplotlib', 'sympy', 'cython',
                 'pandas', 'statsmodels', 'scikit-learn', 'scikits-image' ]
