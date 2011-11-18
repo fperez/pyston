@@ -194,12 +194,12 @@ def pull(targets):
             clone([target])
 
         print ('pulling %s'%target)
-        command = 'cd %s; git pull; cd ..' % target
+        command = 'cd %s; git pull' % target
         sh(command)
 
 
 def install(targets):
-    install_template = 'cd %s; python setup.py install %s; cd ..'
+    install_template = 'cd %s; python setup.py install %s'
 
     if not os.path.isdir(site_packages):
         print('Site packages missing, making it:', site_packages)
@@ -221,7 +221,7 @@ def install_clean(targets):
     specials = {'matplotlib' : ['pytz', 'dateutil', 'pylab*', 'mpl_toolkits'],
                 'cython' : ['cython.py*', 'Cython*', 'pyximport'],
                 'scikit-learn' : ['scikit_learn*'],
-                'scikits-image' : ['scikits.image-*.egg'],
+                'scikits-image' : ['scikits.image-*.egg', 'skimage-*.egg'],
                 'statsmodels' : ['scikits.statsmodels-*.egg'],
                 }
     
