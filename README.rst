@@ -120,8 +120,7 @@ Customization
 The install location directive is controlled by the ``prefix`` variable.  If
 set to None, then ``--user`` is passed to the setup.py installation routine.
 Otherwise, the value is used with the ``--prefix`` argument.  If you define the
-*environment* variable called ``PREFIX``, it will be used as the value for
-``prefix``.
+environment variable ``PREFIX``, it will override the internal default.
 
 The list of projects to install is set in the ``projects`` variable, which
 should be a list of strings corresponding to project names on github.  This
