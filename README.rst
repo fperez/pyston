@@ -130,12 +130,15 @@ other github python projects you want and they will be automatically picked up
 as well, without having to update the ``projects`` list by hand each time
 (updating the default ``projects`` is only needed for the ``clone`` action).
 
+
 These two variables, ``prefix`` and ``projects``, are set to their defaults in
-this file, but can be modified by the user by defining them in a file named
-``pyston_conf.py`` located in this same directory (a file overrides also the
-``PREFIX`` environment variable).  A template for that file should have been
-provided along with this script, but absent that, it's just a python script
-that declares two variables named ``prefix`` and ``projects`` as indicated.
+the main ``pyston`` executable, but can be modified by the user by defining
+them in a file named ``pyston_conf.py`` located in the working directory (a
+file overrides also the ``PREFIX`` environment variable).  A template for that
+file should have been provided along with this script, but absent that, it's
+just a python script that can declare any of two variables named ``prefix`` and
+``projects`` as indicated.  The default values of those are made available to
+the script, in case you want to modify instead of replacing the defaults.
 
 If you use the default prefix, Python will automatically find packages
 installed with ``--user``, but scripts will go to ``~/.local/bin``.  You should
