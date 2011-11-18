@@ -134,18 +134,26 @@ as well, without having to update the ``projects`` list by hand each time
 These two variables, ``prefix`` and ``projects``, are set to their defaults in
 the main ``pyston`` executable, but can be modified by the user by defining
 them in a file named ``pyston_conf.py`` located in the working directory (a
-file overrides also the ``PREFIX`` environment variable).  A template for that
-file should have been provided along with this script, but absent that, it's
-just a python script that can declare any of two variables named ``prefix`` and
-``projects`` as indicated.  The default values of those are made available to
-the script, in case you want to modify instead of replacing the defaults.
+file overrides also the ``PREFIX`` environment variable).  A template for
+``pyston_conf.py`` is available in the pyston repository, but all you need to
+do is declare the variables you want, e.g.::
 
-If you use the default prefix, Python will automatically find packages
-installed with ``--user``, but scripts will go to ``~/.local/bin``.  You should
-thus configure your $PATH to include this by using something such as this in
-your ``~/.bashrc`` file::
+  prefix = '~/usr/local'
+  projects = ['ipython', 'numpy', 'matplotlib', 'networkx']
 
-  export PATH=$HOME/.local/bin:$PATH
+The default values of those variables are made available to the script, in case
+you want to modify instead of replacing the defaults, e.g.::
+
+  projects.extend(['networkx'])
+
+.. warning::
+
+    If you use the default prefix, Python will automatically find packages
+    installed with ``--user``, but scripts will go to ``~/.local/bin``.  You
+    should thus configure your $PATH to include this by using something such as
+    this in your ``~/.bashrc`` file::
+
+      export PATH=$HOME/.local/bin:$PATH
 
 
 License
