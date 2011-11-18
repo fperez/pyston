@@ -56,8 +56,8 @@ default builtin list of packages (a collection of scientific computing python
 tools) for cloning, and to all the git repositories in the working directory
 for all other actions.
 
-The simplest way to use it is to simply clone the included default list of
-packages with::
+The simplest way to use it is to simply clone and insatall the included default
+list of packages with::
 
     pyston clone install all
 
