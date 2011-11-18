@@ -23,19 +23,29 @@ All words not recognized as actions are treated as targets.  It's OK for
 targets to have a trailing slash (which happens if you tab-complete names),
 they will be removed.
 
-If no action is given, the default action is 'update'.
+If no action is given, the default action is 'update' (see below).
 
 The targets can be either the string 'all' or the names of git repositories
-available in the working directory.  If the 'clone' action is provided, they
-can also include names of projects on github.com (that are named with the
-convention github.com/name/name), and they will be cloned first.
+available in the working directory.  If the 'clone' action is provided, you can
+also include the names of projects on github.com.  As long as they are named
+with the convention ``github.com/name/name``), they will be cloned first.
 
-If no target is given, 'all' is assumed. 'all' will 
+If no target is given, 'all' is assumed. The 'all' target expands to the
+default builtin list of packages (a collection of scientific computing python
+tools) for cloning, and to all the git repositories in the working directory
+for all other actions.
 
 The simplest way to use it is to simply clone the included default list of
-packages (a collection of scientific computing python tools) with::
+packages with::
 
     pyston clone install all
+
+.. note::
+
+   This will clone roughly 10 packages from github, several of which have
+   complex build dependencies (such as scipy or matplotlib), so don't clone the
+   full default list unless you really want them all and have all the build
+   dependencies.
 
 Afterwards, this::
 
