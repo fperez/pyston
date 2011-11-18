@@ -235,6 +235,7 @@ def install_clean(targets):
         if target in specials:
             purge(specials[target])
 
+
 def clean(targets):
     for target in targets:
         command = 'rm -rf %s/build' % target
