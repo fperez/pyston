@@ -1,57 +1,89 @@
 #!/usr/bin/env python
-"""Clone/update from github and locally install Python packages.
+"""pyston: a simple tool for managing python source packages
 
 Purpose
 =======
 
-This is a simple tool meant to easily manage a collection of github-hosted
-python packages from source, so that it's quick to clone, build, install and
-update them with a simple command.
+``pyston`` is a simple tool meant to easily manage a collection of
+github-hosted python packages from source, so that it's quick to clone, build,
+install and update them with few commands.
 
 
 Usage
 =====
 
-  ./pyston  TARGET1,TARGET2  ACTION1  ACTION2 ...
+The general command line usage is (assuming ``pyston`` is in your path,
+otherwise use the full path to the script)::
 
-TARGET is 'all' or a *comma-separated* list of targets.
+  pyston  [ACTION1  ACTION2 ... TARGET1 TARGET2 ...]
 
-ACTION defaults to `update`, which pulls from git, fully cleans all
-build/installation products, and installs.
+At least one action or target must be provided.  Actions and targets are
+identified because the list of valid actions is short and fixed (see below).
+All words not recognized as actions are treated as targets.  It's OK for
+targets to have a trailing slash (which happens if you tab-complete names),
+they will be removed.
 
+If no action is given, the default action is 'update'.
 
-The simplest way to use it is to 
+The targets can be either the string 'all' or the names of git repositories
+available in the working directory.  If the 'clone' action is provided, they
+can also include names of projects on github.com (that are named with the
+convention github.com/name/name), and they will be cloned first.
+
+If no target is given, 'all' is assumed. 'all' will 
+
+The simplest way to use it is to simply clone the included default list of
+packages (a collection of scientific computing python tools) with::
+
+    pyston clone install all
 
 Afterwards, this::
 
-    ./pyston all
+    pyston update
 
-will run a full update of all packages (i.e. pull from git, remove previous
-build/install, rebuild from scratch and reinstall).  Individual packages can be
-updated::
+will run an update of all packages (i.e. pull from git and reinstall).
+Individual packages can be updated::
 
-    ./pyston numpy,scipy
-
-and if you want finer control (for example, pull from github and install
-without removing previous build/installation data)::
-
-    ./pyston all pull install
+    pyston update numpy scipy
 
 You can also clone and install any project that's hosted on github with a URL
 of the pattern ``github.com/PROJECT/PROJECT`` with::
 
-    ./pyston PROJECT clone install
+    pyston clone install PROJECT
 
 even if it is not listed on the default project list.  And since all locally
 available packages (directories with ``.git`` and ``setup.py``) are
 automatically loaded, you can use this tool to continue updating them without
 need for further customization.
-    
-The general syntax is::
-    
-    ./pyston  TARGET1,TARGET2  ACTION1  ACTION2 ...
 
-    
+
+Available actions
+=================
+
+clone
+  Clone a repository hosted on github with the name pattern
+  github.com/target/target.
+
+pull
+  Change to the target directory and run ``git pull``.
+
+install
+  Run ``python setup.py install`` with the appropriate installation prefix
+  variable (see below in customization section).
+
+install_clean
+  Clean the installation directory for the target.
+
+clean
+  Clean the build directory for the target.
+
+update
+  Run pull, then install.
+
+full_update
+  Run pull, clean, install_clean and install.
+
+
 Customization
 =============
 
@@ -109,6 +141,104 @@ import os
 import sys
 
 #-----------------------------------------------------------------------------
+# Globals
+#-----------------------------------------------------------------------------
+
+# These globals are needed below, their values are set in create_globals()
+
+actiond = None
+install_directive = None
+projects = None
+site_packages = None
+
+#-----------------------------------------------------------------------------
+# Action definitions
+#-----------------------------------------------------------------------------
+
+def clone(targets):
+    clone_template = 'git clone git://github.com/%(project)s/%(project)s.git'
+    for target in targets:
+        if target=='pandas':
+            command = 'git clone git://github.com/wesm/pandas.git'
+        else:
+            command = clone_template % {'project' : target}
+
+        if not os.path.exists(target):
+            sh(command)
+        else:
+            print ('already have a clone of %s' % target)
+
+
+def pull(targets):
+    for target in targets:
+        if not os.path.exists(target):
+            clone([target])
+
+        print ('pulling %s'%target)
+        command = 'cd %s; git pull; cd ..' % target
+        sh(command)
+
+
+def install(targets):
+    install_template = 'cd %s; python setup.py install %s; cd ..'
+
+    if not os.path.isdir(site_packages):
+        print('Site packages missing, making it:', site_packages)
+        os.makedirs(site_packages)
+        
+    for target in targets:
+        command = install_template % (target, install_directive)
+        print ('installing %s' % target)
+        sh(command)
+
+
+def install_clean(targets):
+    base = 'rm -rf %s/' % site_packages
+
+    def purge(extras):
+        for p in extras:
+            sh(base + p)
+    
+    specials = {'matplotlib' : ['pytz', 'dateutil', 'pylab*', 'mpl_toolkits'],
+                'cython' : ['cython.py*', 'Cython*', 'pyximport'],
+                'scikit-learn' : ['scikit_learn*'],
+                'scikits-image' : ['scikits.image-*.egg'],
+                'statsmodels' : ['scikits.statsmodels-*.egg'],
+                }
+    
+    for target in targets:
+        command = base + target
+        print ('cleaning install dir for %s:' % target)
+        sh(command)
+        sh(command + '*.egg*')
+        # Special cleanups for certain projects with different naming
+        # conventions or that leave things outside their main package dir
+        if target in specials:
+            purge(specials[target])
+
+def clean(targets):
+    for target in targets:
+        command = 'rm -rf %s/build' % target
+        print ('cleaning %s' % target)
+        sh(command)
+
+
+def update(targets):
+    for target in targets:
+        target = [target]
+        pull(target)
+        install(target)
+
+
+def full_update(targets):
+    for target in targets:
+        target = [target]
+        pull(target)
+        clean(target)
+        install_clean(target)
+        install(target)
+
+#-----------------------------------------------------------------------------
 # Utility functions
 #-----------------------------------------------------------------------------
 
@@ -118,7 +248,7 @@ def sh(cmd):
 
 
 def usage():
-    install = install_location
+    install = install_directive
     targets = sorted(projects)
     actions = sorted(actiond)
     config = """
@@ -163,86 +293,13 @@ def update_projects():
                 local_projects.append(d)
     projects.extend(local_projects)
 
-
 #-----------------------------------------------------------------------------
-# Action definitions
-#-----------------------------------------------------------------------------
-
-def clone(targets):
-    clone_template = 'git clone git://github.com/%(project)s/%(project)s.git'
-    for target in targets:
-        if target=='pandas':
-            command = 'git clone git://github.com/wesm/pandas.git'
-        else:
-            command = clone_template % {'project' : target}
-
-        if not os.path.exists(target):
-            sh(command)
-        else:
-            print ('already have a clone of %s' % target)
-
-
-def pull(targets):
-    for target in targets:
-        if not os.path.exists(target):
-            clone([target])
-
-        print ('pulling %s'%target)
-        command = 'cd %s; git pull; cd ..' % target
-        sh(command)
-
-
-def install(targets):
-    install_template = 'cd %s; python setup.py install %s; cd ..'
-
-    if not os.path.isdir(site_packages):
-        print('Site packages missing, making it:', site_packages)
-        os.makedirs(site_packages)
-        
-    for target in targets:
-        command = install_template % (target, install_location)
-        print ('installing %s' % target)
-        sh(command)
-
-
-def install_clean(targets):
-    base = 'rm -rf %s/' % site_packages
-    for target in targets:
-        command = base + target
-        print ('cleaning install dir for %s: %s' % (target, command))
-        sh(command)
-        sh(command + '*.egg*')
-        # Special cleanups for certain projects with different naming
-        # conventions or that leave things outside their main package dir
-        if target == 'matplotlib':
-            for p in ['pytz', 'dateutil', 'pylab*', 'mpl_toolkits']:
-                sh(base+p)
-        elif target == 'cython':
-            sh(base+'Cython*')
-            sh(base+'pyximport')
-
-
-def update(targets):
-    for target in targets:
-        target = [target]
-        pull(target)
-        clean(target)
-        install_clean(target)
-        install(target)
-
-
-def clean(targets):
-    for target in targets:
-        command = 'rm -rf %s/build' % target
-        print ('cleaning %s' % target)
-        sh(command)
-
-#-----------------------------------------------------------------------------
-# Main script
+# Main functions
 #-----------------------------------------------------------------------------
 
-if __name__=='__main__':
-
+def create_globals():
+    global actiond, install_directive, projects, site_packages
+    
     # Default configuration.  This can be overridden in the pyston_conf.py file.
     # None amounts to installing with --user, which puts things in ~/.local/.
     prefix = os.environ.get('PREFIX')
@@ -259,17 +316,18 @@ if __name__=='__main__':
         prefix = overrides['prefix']
         projects = overrides['projects']
         
-    # Actual code execution starts here.
     actiond = dict( (f.__name__, f) for f in
-                    [clone, pull, install, clean, install_clean, update] )
+                    [clone, pull, install, clean, install_clean,
+                     update, full_update] )
 
     # Compute location of site-packages and actual arguments for installation
     if prefix is None:
-        install_location = '--user'
+        install_directive = '--user'
         prefix = '~/.local'
     else:
-        install_location = '--prefix=' + prefix
-        
+        install_directive = '--prefix=' + prefix
+
+    # We need to know where the site-packages directory will be for many actions
     pythonXY = 'python%d.%d' % sys.version_info[:2]
     sp = '%s/lib/%s/site-packages' % (prefix, pythonXY)
     site_packages = os.path.expanduser(os.path.expandvars(sp))
@@ -279,20 +337,26 @@ if __name__=='__main__':
     # want to clone an extra project
     update_projects()
 
+
+def main():
+    create_globals()
+    
     # This could be done more nicely with argparse, but that's a 2.7
     # dependency, so let's do it manually for now.
-    if len(sys.argv)<2:
+
+    # At least one argument must be given.  We strip tab-completion added
+    # trailing slashes for convenience.
+    args = [ a.rstrip('/') for a in sys.argv[1:] ]
+
+    if not args:
         usage()
 
-    # Targets must be given
-    targets = sys.argv[1].split(',')
+    action_set = set(actiond)
+    arg_set = set(args)
+    actions = arg_set & action_set
+    targets = arg_set - actions
 
-    # Actions, default is to update all targets
-    actions = sys.argv[2:]
-    if not actions:
-        actions = ['update']
-
-    if targets == ['all']:
+    if not targets or targets == ['all']:
         # Unless cloning, 'all' should be interpreted as 'all available', so
         # that it doesn't complain about missing targets that are in the
         # default list.
@@ -301,9 +365,6 @@ if __name__=='__main__':
         else:
             targets = [p for p in projects if os.path.isdir(p)]
         
-    # Ensure all actions and targets are valid, and execute
-    validate(actions, actiond, 'action')
-
     # If users call 'clone', that action should be performed first without
     # target validation, so people can clone any github project without having
     # to edit the config at all.
@@ -316,3 +377,10 @@ if __name__=='__main__':
     validate(targets, projects, 'target')
     for action in actions:
         actiond[action](targets)
+
+#-----------------------------------------------------------------------------
+# Script entry point
+#-----------------------------------------------------------------------------
+
+if __name__=='__main__':
+    main()

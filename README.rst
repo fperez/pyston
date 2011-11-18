@@ -6,63 +6,102 @@ Quickstart
 ==========
 
 If you want to get started with this repository in a single shot and want to
-clone and build all the default projects (assuming you have the necessary build
-dependencies and compilers already on your system), type this::
+clone and build all the default projects (a list of popular scientific
+computing Python projects hosted) , copy and paste this (assuming you have the
+necessary build dependencies and compilers already on your system)::
 
     git clone git://github.com/fperez/pyston.git
     cd pyston
-    ./pyston all clone install
+    ./pyston clone install all
+
+For regular use, the most convenient is to symlink the ``pyston`` script from
+somewhere in your ``$PATH``.  You can then use ``pyston`` as a command from
+anywhere in your system to quickly clone, update and install github-hosted
+python packages.  See how to customize the install location or default package
+list below.
 
 
 Purpose
 =======
 
-This is a simple tool meant to easily manage a collection of github-hosted
-python packages from source, so that it's quick to clone, build, install and
-update them with a simple command.
+``pyston`` is a simple tool meant to easily manage a collection of
+github-hosted python packages from source, so that it's quick to clone, build,
+install and update them with few commands.
 
 
 Usage
 =====
 
-  ./pyston  TARGET1,TARGET2  ACTION1  ACTION2 ...
+The general command line usage is (assuming ``pyston`` is in your path,
+otherwise use the full path to the script)::
 
-TARGET is 'all' or a *comma-separated* list of targets.
+  pyston  [ACTION1  ACTION2 ... TARGET1 TARGET2 ...]
 
-ACTION defaults to `update`, which pulls from git, fully cleans all
-build/installation products, and installs.
+At least one action or target must be provided.  Actions and targets are
+identified because the list of valid actions is short and fixed (see below).
+All words not recognized as actions are treated as targets.  It's OK for
+targets to have a trailing slash (which happens if you tab-complete names),
+they will be removed.
 
+If no action is given, the default action is 'update'.
 
-The simplest way to use it is to 
+The targets can be either the string 'all' or the names of git repositories
+available in the working directory.  If the 'clone' action is provided, they
+can also include names of projects on github.com (that are named with the
+convention github.com/name/name), and they will be cloned first.
+
+If no target is given, 'all' is assumed. 'all' will 
+
+The simplest way to use it is to simply clone the included default list of
+packages (a collection of scientific computing python tools) with::
+
+    pyston clone install all
 
 Afterwards, this::
 
-    ./pyston all
+    pyston update
 
-will run a full update of all packages (i.e. pull from git, remove previous
-build/install, rebuild from scratch and reinstall).  Individual packages can be
-updated::
+will run an update of all packages (i.e. pull from git and reinstall).
+Individual packages can be updated::
 
-    ./pyston numpy,scipy
-
-and if you want finer control (for example, pull from github and install
-without removing previous build/installation data)::
-
-    ./pyston all pull install
+    pyston update numpy scipy
 
 You can also clone and install any project that's hosted on github with a URL
 of the pattern ``github.com/PROJECT/PROJECT`` with::
 
-    ./pyston PROJECT clone install
+    pyston clone install PROJECT
 
 even if it is not listed on the default project list.  And since all locally
 available packages (directories with ``.git`` and ``setup.py``) are
 automatically loaded, you can use this tool to continue updating them without
 need for further customization.
-    
-The general syntax is::
-    
-    ./pyston  TARGET1,TARGET2  ACTION1  ACTION2 ...
+
+
+Available actions
+=================
+
+clone
+  Clone a repository hosted on github with the name pattern
+  github.com/target/target.
+
+pull
+  Change to the target directory and run ``git pull``.
+
+install
+  Run ``python setup.py install`` with the appropriate installation prefix
+  variable (see below in customization section).
+
+install_clean
+  Clean the installation directory for the target.
+
+clean
+  Clean the build directory for the target.
+
+update
+  Run pull, then install.
+
+full_update
+  Run pull, clean, install_clean and install.
 
 
 Customization
