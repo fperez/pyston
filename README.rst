@@ -6,9 +6,10 @@ Quickstart
 ==========
 
 If you want to get started with this repository in a single shot and want to
-clone and build all the default projects (a list of popular scientific
-computing Python projects hosted) , copy and paste this (assuming you have the
-necessary build dependencies and compilers already on your system)::
+clone and build all the default projects (a list of roughly 10 popular
+scientific computing Python projects hosted at github), simply run this in a
+terminal (assuming you have the necessary build dependencies and compilers
+already on your system)::
 
     git clone git://github.com/fperez/pyston.git
     cd pyston
