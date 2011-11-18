@@ -376,7 +376,7 @@ def main():
     actions = arg_set & action_set
     targets = arg_set - actions
 
-    if not targets or targets == ['all']:
+    if not targets or targets == set(['all']):
         # Unless cloning, 'all' should be interpreted as 'all available', so
         # that it doesn't complain about missing targets that are in the
         # default list.
