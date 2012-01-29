@@ -81,8 +81,8 @@ install
   Run ``python setup.py install`` with the appropriate installation prefix
   variable (see below in customization section).
 
-install_clean
-  Clean the installation directory for the target.
+uninstall
+  Remove the target's entire installation directory.
 
 clean
   Clean the build directory for the target.
@@ -167,9 +167,14 @@ import sys
 # Globals
 #-----------------------------------------------------------------------------
 
+# Default list of commonly used projects, can be changed statically here if
+# desired, though it's easy enough for users to customize themselves.
+default_projects = ['ipython', 'numpy', 'scipy', 'matplotlib', 'sympy', 
+                    'cython', 'statsmodels', 'scikit-learn', 'scikits-image',
+                    'wesm:pandas']
+
 # These globals are needed below, their values are set in create_globals()
 
-actiond = None
 install_directive = None
 projectd = None
 site_packages = None
@@ -178,6 +183,16 @@ site_packages = None
 # Action definitions
 #-----------------------------------------------------------------------------
 
+# Global registry of actions
+actiond = {}
+
+def action(func):
+    """Convenience decorator to register a function as a command-line action"""
+    actiond[func.__name__] = func
+    return func
+
+
+@action
 def clone(repo, user=None):
     user = repo if user is None else user
     clone_template = 'git clone git://github.com/%(user)s/%(repo)s.git'
@@ -188,12 +203,14 @@ def clone(repo, user=None):
         print ('already have a clone of %s' % repo)
 
 
+@action
 def pull(repo):
     print ('pulling %s' % repo)
     command = 'cd %s; git pull' % repo
     sh(command)
 
 
+@action
 def install(repo):
     install_template = 'cd %s; python setup.py install %s'
 
@@ -206,6 +223,7 @@ def install(repo):
     sh(command)
 
 
+@action
 def uninstall(repo):
     base = 'rm -rf %s/' % site_packages
 
@@ -230,22 +248,25 @@ def uninstall(repo):
         purge(specials[repo])
 
 
+@action
 def clean(repo):
     command = 'rm -rf %s/build' % repo
     print ('cleaning %s' % repo)
     sh(command)
 
 
+@action
 def update(repo):
     pull(repo)
     install(repo)
 
 
+@action
 def clean_update(repo):
-        pull(repo)
-        clean(repo)
-        install_clean(repo)
-        install(repo)
+    pull(repo)
+    clean(repo)
+    uninstall(repo)
+    install(repo)
 
 #-----------------------------------------------------------------------------
 # Utility functions
@@ -314,32 +335,26 @@ def update_projectd():
 #-----------------------------------------------------------------------------
 
 def create_globals():
-    global actiond, install_directive, projectd, site_packages
+    global install_directive, projects, projectd, site_packages
     
     # Default configuration.  This can be overridden in the pyston_conf.py file.
     # None amounts to installing with --user, which puts things in ~/.local/.
     prefix = os.environ.get('PREFIX')
 
-    projects = ['ipython', 'numpy', 'scipy', 'matplotlib', 'sympy', 'cython',
-                'statsmodels', 'scikit-learn', 'scikits-image',
-                'wesm:pandas']
-
     # Users can override the defaults in an (optional) pyston_conf.py file
     if os.path.exists('pyston_conf.py'):
         # Preload the namespace of make_conf with our variables so the user can
         # append/extend them if desired.
-        overrides = dict(prefix=prefix, projects=projects)
+        overrides = dict(prefix=prefix, projects=default_projects)
         execfile('pyston_conf.py', overrides)
         prefix = overrides['prefix']
         projects = overrides['projects']
+    else:
+        projects = default_projects
 
     # Turn the simple list-based project spec into the project dict we need,
     # keyed by repo.
     projectd = dict(normalize(projects))
-
-    actiond = dict( (f.__name__, f) for f in
-                    [clone, pull, install, clean, uninstall,
-                     update, clean_update] )
 
     # Compute location of site-packages and actual arguments for installation
     if prefix is None:
