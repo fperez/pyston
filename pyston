@@ -327,11 +327,11 @@ def create_globals():
     # Users can override the defaults in an (optional) pyston_conf.py file
     if os.path.exists('pyston_conf.py'):
         # Preload the namespace of make_conf with our variables so the user can
-        # append/extend them if desired
-        overrides = {}
+        # append/extend them if desired.
+        overrides = dict(prefix=prefix, projects=projects)
         execfile('pyston_conf.py', overrides)
-        prefix = overrides.get('prefix', prefix)
-        projects = overrides.get('projects', projects)
+        prefix = overrides['prefix']
+        projects = overrides['projects']
 
     # Turn 
     projects = dict(normalize(projects))
