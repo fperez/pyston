@@ -118,7 +118,11 @@ file overrides also the ``PREFIX`` environment variable).  A template for
 do is declare the variables you want, e.g.::
 
   prefix = '~/usr/local'
-  projects = ['ipython', 'numpy', 'matplotlib', 'networkx']
+  projects = ['ipython', 'numpy', 'matplotlib', 'wesm:pandas']
+
+A project can be specified either as a string with the repo name on github, or
+as 'user:repo'.  If only the repo is specified, the username is assumed to be
+the same.
 
 The default values of those variables are made available to the script, in case
 you want to modify instead of replacing the defaults, e.g.::
@@ -174,44 +178,35 @@ site_packages = None
 # Action definitions
 #-----------------------------------------------------------------------------
 
-def clone(targets):
-    clone_template = 'git clone git://github.com/%(project)s/%(project)s.git'
-    for target in targets:
-        if target=='pandas':
-            command = 'git clone git://github.com/wesm/pandas.git'
-        else:
-            command = clone_template % {'project' : target}
-
-        if not os.path.exists(target):
-            sh(command)
-        else:
-            print ('already have a clone of %s' % target)
-
-
-def pull(targets):
-    for target in targets:
-        if not os.path.exists(target):
-            clone([target])
-
-        print ('pulling %s'%target)
-        command = 'cd %s; git pull' % target
+def clone(repo, user=None):
+    user = repo if user is None else user
+    clone_template = 'git clone git://github.com/%(user)s/%(repo)s.git'
+    command = clone_template % dict(repo=repo, user=user)
+    if not os.path.exists(repo):
         sh(command)
+    else:
+        print ('already have a clone of %s' % repo)
 
 
-def install(targets):
+def pull(repo):
+    print ('pulling %s' % repo)
+    command = 'cd %s; git pull' % repo
+    sh(command)
+
+
+def install(repo):
     install_template = 'cd %s; python setup.py install %s'
 
     if not os.path.isdir(site_packages):
         print('Site packages missing, making it:', site_packages)
         os.makedirs(site_packages)
         
-    for target in targets:
-        command = install_template % (target, install_directive)
-        print ('installing %s' % target)
-        sh(command)
+    command = install_template % (repo, install_directive)
+    print ('installing %s' % repo)
+    sh(command)
 
 
-def install_clean(targets):
+def uninstall(repo):
     base = 'rm -rf %s/' % site_packages
 
     def purge(extras):
@@ -225,42 +220,42 @@ def install_clean(targets):
                 'statsmodels' : ['scikits.statsmodels-*.egg'],
                 }
     
-    for target in targets:
-        command = base + target
-        print ('cleaning install dir for %s:' % target)
-        sh(command)
-        sh(command + '*.egg*')
-        # Special cleanups for certain projects with different naming
-        # conventions or that leave things outside their main package dir
-        if target in specials:
-            purge(specials[target])
+    command = base + repo
+    print ('cleaning install dir for %s:' % repo)
+    sh(command)
+    sh(command + '*.egg*')
+    # Special cleanups for certain projects with different naming
+    # conventions or that leave things outside their main package dir
+    if repo in specials:
+        purge(specials[repo])
 
 
-def clean(targets):
-    for target in targets:
-        command = 'rm -rf %s/build' % target
-        print ('cleaning %s' % target)
-        sh(command)
+def clean(repo):
+    command = 'rm -rf %s/build' % repo
+    print ('cleaning %s' % repo)
+    sh(command)
 
 
-def update(targets):
-    for target in targets:
-        target = [target]
-        pull(target)
-        install(target)
+def update(repo):
+    pull(repo)
+    install(repo)
 
 
-def full_update(targets):
-    for target in targets:
-        target = [target]
-        pull(target)
-        clean(target)
-        install_clean(target)
-        install(target)
+def full_update(repo):
+        pull(repo)
+        clean(repo)
+        install_clean(repo)
+        install(repo)
 
 #-----------------------------------------------------------------------------
 # Utility functions
 #-----------------------------------------------------------------------------
+
+def normalize(targets):
+    """Normalize a list of target specs, returning (repo, user) pairs."""
+    for t in targets:
+        user, repo = t.split(':') if ':' in t else (t, t)
+        yield repo, user
 
 def sh(cmd):
     print('$', cmd)
@@ -286,32 +281,33 @@ Install location directive:
 """  % locals()
     print(__doc__)
     print(config)
-    sys.exit(1)
 
 
 def validate(given, full, type):
     bad = set(given) - set(full)
     if bad:
-        print('*** ERROR ***')
+        usage()
+        print('\n*** ERROR ***')
         for target in bad:
             print('Bad %s=%s' % (type, target))
-        usage()
-
+        sys.exit(1)
 
 def update_projects():
     """Update the global `projects` list with repos in the current directory"""
 
     local_projects = []
+    global_projects = set(projects)
     for root, dirs, files in os.walk('.', followlinks=True):
         if root != '.':
             # Avoid recursing deeper, we only want to look at the top-level
             break
         # Only check for things not already in the projects list
-        for d in set(dirs) - set(projects):
+        for d in set(dirs) - global_projects:
             if os.path.isdir('%s/.git' % d) and \
                os.path.isfile('%s/setup.py' % d):
                 local_projects.append(d)
-    projects.extend(local_projects)
+
+    projects.update(dict(normalize(local_projects)))
 
 #-----------------------------------------------------------------------------
 # Main functions
@@ -324,8 +320,11 @@ def create_globals():
     # None amounts to installing with --user, which puts things in ~/.local/.
     prefix = os.environ.get('PREFIX')
 
-    projects = ['ipython', 'numpy', 'scipy', 'matplotlib', 'sympy', 'cython',
-                'pandas', 'statsmodels', 'scikit-learn', 'scikits-image' ]
+    specs = ['ipython', 'numpy', 'scipy', 'matplotlib', 'sympy', 'cython',
+             'statsmodels', 'scikit-learn', 'scikits-image',
+             'wesm:pandas', 'matplotlib:basemap'  ]
+
+    projects = dict(normalize(specs))
 
     # Users can override the defaults in an (optional) pyston_conf.py file
     if os.path.exists('pyston_conf.py'):
@@ -337,7 +336,7 @@ def create_globals():
         projects = overrides['projects']
         
     actiond = dict( (f.__name__, f) for f in
-                    [clone, pull, install, clean, install_clean,
+                    [clone, pull, install, clean, uninstall,
                      update, full_update] )
 
     # Compute location of site-packages and actual arguments for installation
@@ -383,20 +382,25 @@ def main():
         if 'clone' in actions:
             targets = projects
         else:
-            targets = [p for p in projects if os.path.isdir(p)]
-        
+            targets = dict((p,u) for p,u in projects.iteritems() 
+                           if os.path.isdir(p))
+    else:
+        targets = dict(normalize(targets))
+
     # If users call 'clone', that action should be performed first without
     # target validation, so people can clone any github project without having
     # to edit the config at all.
     if 'clone' in actions:
-        clone(targets)
+        for repo, user in targets.iteritems():
+            clone(repo, user)
+            projects[repo] = user
         actions.remove('clone')
-        update_projects()
 
     # After clone, all other actions should only be performed on valid targets
     validate(targets, projects, 'target')
     for action in actions:
-        actiond[action](targets)
+        for repo in targets:
+            actiond[action](repo)
 
 #-----------------------------------------------------------------------------
 # Script entry point
