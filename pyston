@@ -90,7 +90,7 @@ clean
 update
   Run pull, then install.
 
-full_update
+clean_update
   Run pull, clean, install_clean and install.
 
 
@@ -241,7 +241,7 @@ def update(repo):
     install(repo)
 
 
-def full_update(repo):
+def clean_update(repo):
         pull(repo)
         clean(repo)
         install_clean(repo)
@@ -337,7 +337,7 @@ def create_globals():
         
     actiond = dict( (f.__name__, f) for f in
                     [clone, pull, install, clean, uninstall,
-                     update, full_update] )
+                     update, clean_update] )
 
     # Compute location of site-packages and actual arguments for installation
     if prefix is None:
