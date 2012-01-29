@@ -72,7 +72,7 @@ Available actions
 
 clone
   Clone a repository hosted on github with the name pattern
-  github.com/target/target.
+  github.com/user/repo. Specify as 'user:repo' or 'repo' if user==repo.
 
 pull
   Change to the target directory and run ``git pull``.
