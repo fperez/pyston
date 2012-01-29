@@ -9,4 +9,6 @@ the definition of the variables 'prefix' and 'projects'.
 # prefix = '~/usr/local'
 
 # projects = ['ipython', 'numpy', 'scipy', 'matplotlib', 'sympy', 'cython',
-#             'pandas', 'statsmodels', 'scikit-learn', 'scikits-image' ]
+#             'statsmodels', 'scikit-learn', 'scikits-image',
+#             'wesm:pandas']
+

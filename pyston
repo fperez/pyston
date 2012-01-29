@@ -320,11 +320,9 @@ def create_globals():
     # None amounts to installing with --user, which puts things in ~/.local/.
     prefix = os.environ.get('PREFIX')
 
-    specs = ['ipython', 'numpy', 'scipy', 'matplotlib', 'sympy', 'cython',
-             'statsmodels', 'scikit-learn', 'scikits-image',
-             'wesm:pandas', 'matplotlib:basemap'  ]
-
-    projects = dict(normalize(specs))
+    projects = ['ipython', 'numpy', 'scipy', 'matplotlib', 'sympy', 'cython',
+                'statsmodels', 'scikit-learn', 'scikits-image',
+                'wesm:pandas']
 
     # Users can override the defaults in an (optional) pyston_conf.py file
     if os.path.exists('pyston_conf.py'):
@@ -334,7 +332,10 @@ def create_globals():
         execfile('pyston_conf.py', overrides)
         prefix = overrides.get('prefix', prefix)
         projects = overrides.get('projects', projects)
-        
+
+    # Turn 
+    projects = dict(normalize(projects))
+
     actiond = dict( (f.__name__, f) for f in
                     [clone, pull, install, clean, uninstall,
                      update, clean_update] )
