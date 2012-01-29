@@ -171,7 +171,7 @@ import sys
 
 actiond = None
 install_directive = None
-projects = None
+projectd = None
 site_packages = None
 
 #-----------------------------------------------------------------------------
@@ -264,7 +264,7 @@ def sh(cmd):
 
 def usage():
     install = install_directive
-    targets = sorted(projects)
+    targets = sorted(projectd)
     actions = sorted(actiond)
     config = """
 Current configuration
@@ -292,29 +292,29 @@ def validate(given, full, type):
             print('Bad %s=%s' % (type, target))
         sys.exit(1)
 
-def update_projects():
-    """Update the global `projects` list with repos in the current directory"""
+def update_projectd():
+    """Update the global `projectd` list with repos in the current directory"""
 
     local_projects = []
-    global_projects = set(projects)
+    global_projectd = set(projectd)
     for root, dirs, files in os.walk('.', followlinks=True):
         if root != '.':
             # Avoid recursing deeper, we only want to look at the top-level
             break
-        # Only check for things not already in the projects list
-        for d in set(dirs) - global_projects:
+        # Only check for things not already in the projectd dict
+        for d in set(dirs) - global_projectd:
             if os.path.isdir('%s/.git' % d) and \
                os.path.isfile('%s/setup.py' % d):
                 local_projects.append(d)
 
-    projects.update(dict(normalize(local_projects)))
+    projectd.update(dict(normalize(local_projects)))
 
 #-----------------------------------------------------------------------------
 # Main functions
 #-----------------------------------------------------------------------------
 
 def create_globals():
-    global actiond, install_directive, projects, site_packages
+    global actiond, install_directive, projectd, site_packages
     
     # Default configuration.  This can be overridden in the pyston_conf.py file.
     # None amounts to installing with --user, which puts things in ~/.local/.
@@ -333,8 +333,9 @@ def create_globals():
         prefix = overrides['prefix']
         projects = overrides['projects']
 
-    # Turn 
-    projects = dict(normalize(projects))
+    # Turn the simple list-based project spec into the project dict we need,
+    # keyed by repo.
+    projectd = dict(normalize(projects))
 
     actiond = dict( (f.__name__, f) for f in
                     [clone, pull, install, clean, uninstall,
@@ -353,9 +354,9 @@ def create_globals():
     site_packages = os.path.expanduser(os.path.expandvars(sp))
     
     # Find other git-managed projects in the current directory so the user
-    # doesn't have to manually update the projects list all every time he may
+    # doesn't have to manually update the projectd dict all every time he may
     # want to clone an extra project
-    update_projects()
+    update_projectd()
 
 
 def main():
@@ -381,9 +382,9 @@ def main():
         # that it doesn't complain about missing targets that are in the
         # default list.
         if 'clone' in actions:
-            targets = projects
+            targets = projectd
         else:
-            targets = dict((p,u) for p,u in projects.iteritems() 
+            targets = dict((p,u) for p,u in projectd.iteritems() 
                            if os.path.isdir(p))
     else:
         targets = dict(normalize(targets))
@@ -394,11 +395,11 @@ def main():
     if 'clone' in actions:
         for repo, user in targets.iteritems():
             clone(repo, user)
-            projects[repo] = user
+            projectd[repo] = user
         actions.remove('clone')
 
     # After clone, all other actions should only be performed on valid targets
-    validate(targets, projects, 'target')
+    validate(targets, projectd, 'target')
     for action in actions:
         for repo in targets:
             actiond[action](repo)
