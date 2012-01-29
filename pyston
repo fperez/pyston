@@ -330,10 +330,10 @@ def create_globals():
     if os.path.exists('pyston_conf.py'):
         # Preload the namespace of make_conf with our variables so the user can
         # append/extend them if desired
-        overrides = dict(prefix=prefix, projects=projects)
+        overrides = {}
         execfile('pyston_conf.py', overrides)
-        prefix = overrides['prefix']
-        projects = overrides['projects']
+        prefix = overrides.get('prefix', prefix)
+        projects = overrides.get('projects', projects)
         
     actiond = dict( (f.__name__, f) for f in
                     [clone, pull, install, clean, uninstall,
